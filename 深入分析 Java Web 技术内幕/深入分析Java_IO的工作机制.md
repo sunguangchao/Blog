@@ -57,7 +57,7 @@ public void selector() throws IOException{
                 SelectionKey key = (SelectionKey) it.next();
                 if ((key.readyOps() & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT){
                     ServerSocketChannel ssChannel = (ServerSocketChannel)key.channel();
-                    SocketChannel sc = ssChannel.accept();
+                    SocketChannel sc = ssChannel.accept();//接受到服务器端的请求
                     sc.configureBlocking(false);
                     sc.register(selector,SelectionKey.OP_READ);
                     it.remove();
@@ -65,7 +65,7 @@ public void selector() throws IOException{
                     SocketChannel sc = (SocketChannel) key.channel();
                     while (true){
                         buffer.clear();
-                        int n = sc.read(buffer);
+                        int n = sc.read(buffer);//读取数据
                         if (n < 0){
                             break;
                         }
