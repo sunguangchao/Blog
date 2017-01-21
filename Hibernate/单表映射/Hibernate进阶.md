@@ -1,4 +1,4 @@
-hibernate.cfg.xml常用配置
+﻿hibernate.cfg.xml常用配置
 ------------
 
 属性名字  |含义
@@ -30,5 +30,13 @@ session详解
 * getCurrentSession
 
 如果使用getCurrentSession需要在hibernate.cfg.xml文件中进行配置：
-如果是本地事务(jdbc事务)：
-<proportyname>
+如果是本地事务(jdbc事务)：  
+`<property name="hibernate.current_session_context_class">thread</property>`  
+如果是全局事务(jta事务)  
+`<property name="hibernate.current_session_context_class">jta</property>`
+
+`openSession`与`getCurrentSession`的区别
+
+1. getCurrentSession在事务提交或者回滚之后会自动关闭，而openSession需要手动关闭。如果使用openSession而没有手动关闭，多次之后会导致连接池溢出。
+2. openSession每次创建新的session对象，getCurrentSession使用现有的session对象。
+
