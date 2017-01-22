@@ -13,6 +13,7 @@ Hibernate是Java领域的一款开源的ORM框架技术
 Hibernate对JDBC进行了非常轻量级的对象封装
 
 进行使用前，需要安装一个插件：[hibernate tools for eclipse plugins](http://hibernate.org/tools/)
+
 Hibernate jar 包：http://hibernate.org/orm/downloads/
 
 编写第一个Hibernate例子
@@ -24,9 +25,6 @@ Hibernate jar 包：http://hibernate.org/orm/downloads/
 * 创建对象-关系映射文件
 * 通过Hibernate API编写访问数据库的代码
 
-@Test:测试方法
-@Before：初始化方法
-@After：释放资源
-
-
-
+@Test:测试方法  
+@Before：初始化方法  
+@After：释放资源  
