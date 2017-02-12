@@ -25,3 +25,45 @@ JVM中常量类型：
 * Class 类型常量
 	* 表示该类的名称，会指向另外一个UTF8类型的常量
 
+
+
+与`方法`相关的JVM指令
+
+指令  |操作数  |解释
+---  |---|----
+invokeinterface  |class/method desc n  |调用接口方法
+invokespecial    |class/method desc    |调用超类构造方法，实例初始化方法或私有方法
+invokestatic     |class/method desc    |调用静态方法
+invokevirtual    |class/method desc    |调用实例方法
+
+与`类属性`相关的JVM指令
+
+指令  |操作数  |解释  
+----|--|--
+getfield  |class/field desc  |获取指定类的实例域，并将其值压入栈顶
+getstatic |class/field desc |获取指定类的实例域，并将其值压入栈顶
+putfield  |class/field desc |为指定类的实例域赋值
+putstatic |class/field desc |为指定类的静态域赋值
+
+常量池
+---------
+JVM中定义了12中类型的常量：P141
+
+UTF8是一种字符编码格式，他可以存储多个字节长度的字符串值
+
+Fieldref和Methodref常量类型是为了描述Class中的属性项和方法的
+
+Class常量表示的是类的名称，它会指向另一个UTF8类型的常量，该常量存储的是该类的具体名称
+
+NameAndType常量类型是为了表示Fieldref和Methodref的名称和类型描述做进一步说明而存在的
+
+类信息
+------
+Fields和Methods定义
+-----
+类属性描述
+----------
+Javap生成的class文件结构
+
+* LineNumberTable-P152
+* LocalVariableTable-P153
