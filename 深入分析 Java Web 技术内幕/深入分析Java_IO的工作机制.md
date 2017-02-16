@@ -28,7 +28,7 @@ Java序列化就是将一个对象转化成一串二进制表示的字节数组�
 网络I/O工作机制
 --------------
 TCP状态转化*  
- 
+
 影响网络传输的因素  
 
 * 网络带宽
@@ -73,9 +73,7 @@ public void selector() throws IOException{
                     }
                     it.remove();
                 }
-            }
-            
+            }        
         }
-        
     }
 ```
