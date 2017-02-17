@@ -56,3 +56,28 @@ Hotspot提供了三类垃圾收集的算法：
 
 内存问题分析
 -------------
+GC的日志输出如下参数：
+* -verbose:gc,以辅助输出一些详细的CG信息
+* -XX:+PrintGCDetails,输出CG的详细信息
+* -XX:+PrintGCApplicationStoppedTime,输出GC造成应用程序暂停的时间
+* -XX:+PrintGCDateStamps,GC发生的时间信息
+* -XX:+PrintHeapAtGC,在GC前后输出堆中各个区域的大小
+* -Xloggc:[file],将GC的信息输出到单独文件中
+
+GC的日志可以抽象成下列形式：
+```
+[GC[<collector>:<starting occupancy> -> <ending occupancy1>(total size1),<pause time1> secs] <starting occupancy2> -> <ending occupancy2>(total size2), <pause time2> secs]
+```
+其中说明如下：
+* `<collector>`GC表示收集器的名称。
+* `<starting occupancy1>`表示Yound区在GC前占用的内存
+* `<ending occupancy1>`表示Yound区在GC后占用的内存
+* `<pause time1>`表示Young区局部收集时JVM暂停处理的时间
+* `<starting occupancy2>`表示JVM Heap在GC前占用的内存
+* `<ending occupancy2>`表示JVM Heap在GC后占用的内存
+* `<pause time2>`表示在GC过程中JVM暂停处理的总时间
+
+如果随着时间的延长`<ending occupancy2>`的值一直在增长，而且FullGC很频繁，那很可能就是内存泄漏了。
+
+实例分析
+下面作者分析了三个有关内存泄漏的实例，自己读了一遍，发现印象不深，可能要有一些经验之后才有体会吧
