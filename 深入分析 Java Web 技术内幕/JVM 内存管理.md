@@ -16,7 +16,7 @@ Java运行时数据分为6种：
 * PC寄存器数据
     * 用于保存当前正常执行程序的内存地址
 * Java栈
-    * Java栈总是和线程关联在一起，每当创建一个线程时，JVM就会为这个线程创建一个对应的Java栈，在这个栈种又会包含多个栈帧(Frames)，这些栈帧是与每个方法相关联的，每运行一个方法就创建一个栈帧。
+    * Java栈总是和线程关联在一起，每当创建一个线程时，JVM就会为这个线程创建一个对应的Java栈，在这个栈中又会包含多个栈帧(Frames)，这些栈帧是与每个方法相关联的，每运行一个方法就创建一个栈帧。
 * 堆
 * 方法区
 * 运行时常量
@@ -66,7 +66,7 @@ GC的日志输出如下参数：
 
 GC的日志可以抽象成下列形式：
 ```
-[GC[<collector>:<starting occupancy> -> <ending occupancy1>(total size1),<pause time1> secs] <starting occupancy2> -> <ending occupancy2>(total size2), <pause time2> secs]
+[GC[<collector>:<starting occupancy1> -> <ending occupancy1>(total size1),<pause time1> secs] <starting occupancy2> -> <ending occupancy2>(total size2), <pause time2> secs]
 ```
 其中说明如下：
 * `<collector>`GC表示收集器的名称。
