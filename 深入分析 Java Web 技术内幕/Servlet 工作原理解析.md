@@ -55,4 +55,27 @@ Tomcat首先找`globalWebXml`，然后找`hostWebXml`，接着寻找应用的配
 
 下面是解析Servlet的代码片段：
 ```
+P248
 ```
+创建Servlet实例
+=============
+创建Servlet对象
+-----------
+创建Servlet实例的方法是从`Wrapper.loadServlet`开始的，loadServlet方法获取servletClass，然后交给InstanceManager去创建一个基于`servletClass.class`的对象。
+
+初始化Servlet
+-------------
+调用Servlet的init()方法，同时把包装了StandWrapper传给Servlet。
+
+Servlet体系结构
+==========
+Servlet的运行模式是典型的`握手型的交互式`运行模式，就是两个模块为了完成交换数据通常会准备一个交易场景。交易场景由ServleContext来描述，定制的参数由ServletConfig来描述。而ServletRequest和ServletResponse就是要交互的场景。
+
+Servlet如何工作？
+用户从浏览器向服务器发起一个请求通常会包含如下信息：`http://hostname:port/contextpath/servletpath`，hostname和port用来和服务器建立TCP连接，后面的URL才用来选择在服务器的哪个子容器服务用户的请求。
+Tomcat7中有一个专门的类来做这件事：`org.apache.tomcat.util.http.mapper`，这个类保存了Tomcat的Container容器中所有子容器的信息，`org.apache.catalina.connector.Request`类进入Container容器之前，Mapper将会根据这次请求的hostname和contextpath将host和context容器设置到Request的`mappingData`属性中。
+
+后面还有三校节
+* Servlet中的Listener
+* Filter如何工作
+* Servlet中的url-pattern
