@@ -123,3 +123,66 @@ try{
   e.printStackTrace();
 }
 ```
+将abc.txt的内容打印到显示器
+```java
+//方法一
+BufferedReader in = new BufferedReader(new FileReader("abc.txt"));
+String s;
+try{
+   while((s = in.readLine()) != null){
+   System.out.println(s);
+   }
+   in.close();
+}catch(IOException e){
+   e.printStackTrace();
+}
+//方法二
+FileReader in = new FileReader("abc.txt");
+int b;
+try{
+   while((b = in.read()) != -1){
+   System.out.println((char)b);
+   }
+   in.close();
+}catch(IOException e){
+   e.printStackTrace();
+}
+//方法三，可能产生乱码
+FileInputStream in = new FileInputStream("abc.txt");
+int n = 50;
+byte[] buffer = new byte[n];
+try{
+   while ((in.read(buffer, 0, n) != -1 && n > 0)){
+      System.out.println(new String(buffer));
+   }
+   in.close();
+}catch(IOException e){
+   e.printStackTrace();
+}
+```
+
+将A的内容拷贝到文件B
+```java
+FileInputStream in = new FileInputStream("abc.text");
+FileOutputStream out = new FileOutputStream("copy.text");
+int b;
+while((b = in.read()) != -1){
+   out.write(b);
+}
+out.flush();
+in.close();
+out.close();
+```
+
+将标准输入的内容写入文件
+```java
+Scanner in = new Scanner(System.in);
+FileWriter out = new FileWriter("systemIn.log");
+String s;
+while(!(s = in.nextLine()).equals("Q")){
+   out.write(s + "\n");
+}
+out.flush();
+out.close();
+in.close();   
+```
