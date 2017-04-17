@@ -1,1 +1,0 @@
-类加载器(ClassLoader)用来加载class字节码到Java虚拟机中。 一般来说，Java虚拟机使用Java类的方式如下：Java源文件经过javac编译之后转换成Java字节码文件。类加载器负责读取Java字节代码，并转换成java.lang.Class类的一个实例。每一个这样的实例用来表示一个Java类。
