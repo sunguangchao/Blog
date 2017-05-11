@@ -1,5 +1,10 @@
+拆箱和装箱
+----------------
 创建一个java.lang.Interger对象数组
 ```
+//creates an empty array of 5 elements
+Integer[] integers = new Interger[5];
+
 //creates an array of 5 elements with values;
 Integer[] integers = new Integer[]{ Integer.value(1),
 Integer.valueOf(2),

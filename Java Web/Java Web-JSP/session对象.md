@@ -39,11 +39,10 @@ session的生命周期
 	* 调用了 session.invalidate() 方法
 	* Session 过期（超时）
 	* 服务器重新启动
-	
+
 
 Tomcat 默认 session 超时时间为30分钟  
 设置 session 超时有两种方式：
 
 * session.setMaxInactiveInterval(时间);//单位是秒
-*  在web.xml配置
-
+* 在web.xml配置
