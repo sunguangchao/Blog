@@ -9,26 +9,32 @@ Javabean的设计原则
 * `getter`和`setter`方法
 
 什么是Jsp动作
-动作元素为请求阶提供信息
+动作元素为请求阶提供信息。动作元素遵循XML元素的语法，有一个包含元素名的开始标签，可以有属性、可选的内容、与开始标签匹配的结束标签。
+
 
 在Jsp页面如何使用Javabeans
+----------------------
 
 * 像使用普通 java 类一样，创建 javabean 实例
-* 在 Jsp 页面中通常使用 jsp 动作标签使用 javabean
+* 在Jsp页面中通常使用jsp动作标签使用 javabean
 	* `useBeans`动作
 	* `setProperty`动作
 	* `getProperty`动作
 
-**<jsp:useBeans>**
+与存取Javabeans有关的标签
+--------------------
+<jsp:useBeans>
 
 作用：在jsp页面中实例化或者在指定范围内使用javabean:  
 `<jsp:useBean id="标识符" class="java类名" scope="作用范围"/>`
 
-**<jsp.setProperty>**
+<jsp.setProperty>
 
-作用：给已经实例化的 Javabean 对象的属性赋值，一种四种属性。
+作用：给已经实例化的Javabean对象的属性赋值，一共四种属性。
 
-**<jsp.getProperty>**
+<jsp.getProperty>
 
 作用：获取指定Javabean对象的属性值  
 `<jsp:getProperty name="JavaBean实例名" property="属性名"/>`
+
+5-5章节 未完待续
