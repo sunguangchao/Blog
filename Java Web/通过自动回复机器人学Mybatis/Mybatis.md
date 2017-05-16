@@ -1,14 +1,9 @@
 
-MyBatis 是支持定制化 SQL、存储过程以及高级映射的优秀的持久层框架。MyBatis 避免了几乎所有的
- JDBC 代码和手工设置参数以及抽取结果集。MyBatis 使用简单的 XML 或注解来配置和映射基本体，
- 将接口和 Java 的 POJOs(Plain Old Java Objects,普通的 Java对象)映射成数据库中的记录。  
+MyBatis 是支持定制化 SQL、存储过程以及高级映射的优秀的持久层框架。MyBatis 避免了几乎所有的JDBC 代码和手工设置参数以及抽取结果集。
+MyBatis 使用简单的 XML 或注解来配置和映射基本体，将接口和 Java 的 POJOs(Plain Old Java Objects,普通的 Java对象)映射成数据库中的记录。  
 
- [官方文档](http://www.mybatis.org/mybatis-3/)  
- [推荐一篇比较好的博客](http://blog.csdn.net/jiuqiyuliang/article/details/45286191)
-
-
-
-
+ * [官方文档](http://www.mybatis.org/mybatis-3/)  
+ * [推荐一篇比较好的博客](http://blog.csdn.net/jiuqiyuliang/article/details/45286191)
 
 Mybatis之SqlSession
 -------------

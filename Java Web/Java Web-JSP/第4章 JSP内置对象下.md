@@ -29,16 +29,16 @@ session的生命周期
 ----------
 
 * 创建
-	* 当客户端第一次访问某个 JSP 或者 Servlet 时候，服务器会为当前会话创建一个SessionId，每次客户端向服务器发送请求时，都会将此SessionId携带过去，服务端会对此SessionId进行校验。
+  * 当客户端第一次访问某个 JSP 或者 Servlet 时候，服务器会为当前会话创建一个SessionId，每次客户端向服务器发送请求时，都会将此SessionId携带过去，服务端会对此SessionId进行校验。
 * 活动
-	* 某次会话当中通过`超连接`打开的新页面属于同一次会话
-	* 只要当前会话页面没有全部关闭，重新打开的浏览器窗口访问同一项目资源时属于同一次会话
-	* 除非本次会话的所有页面都关闭后在重新访问某个 JSP 或者 Servlet 将会创建新的会话
-	* 注意：原有会话还存在，只是这个旧的SessionId仍然存在于服务端，只不过再也没有客户端会携带它然后交予服务器校验
+  * 某次会话当中通过`超连接`打开的新页面属于同一次会话
+  * 只要当前会话页面没有全部关闭，重新打开的浏览器窗口访问同一项目资源时属于同一次会话
+  * 除非本次会话的所有页面都关闭后在重新访问某个 JSP 或者 Servlet 将会创建新的会话
+  * 注意：原有会话还存在，只是这个旧的SessionId仍然存在于服务端，只不过再也没有客户端会携带它然后交予服务器校验
 * 销毁
-	* 调用了`session.invalidate()`方法
-	* Session 过期（超时）
-	* 服务器重新启动
+  * 调用了`session.invalidate()`方法
+  * Session 过期（超时）
+  * 服务器重新启动
 
 
 Tomcat 默认 session 超时时间为30分钟   
@@ -46,7 +46,7 @@ Tomcat 默认 session 超时时间为30分钟
 1. session.setMaxInactiveInterval(时间);//单位是秒
 2. 在web.xml中配置
 
-```
+```html
 <session-config>
 <session-timeout>
   10
@@ -99,9 +99,9 @@ pageContext对象
 * `Object getPage()`返回当前页中的Object对象(page)
 * `ServletRequest getRequest()`返回当前页的ServletRequest对象(request)
 * `ServketResponse getResponse()`返回当前页的ServletResponse对象(response)
-* void setAttribute(String name, Object attribute)设置属性及属性值
-* Object getAttribute(String name, int scope)在指定范围内取属性的值
-* int getAttributeScope(String name)返回某属性的作用范围
+* `void setAttribute(String name, Object attribute)`设置属性及属性值
+* `Object getAttribute(String name, int scope)`在指定范围内取属性的值
+* `int getAttributeScope(String name)`返回某属性的作用范围
 * `void forward(String relativeUrlPath)`使当前页重导到另一页面
 * `void include(String relativeUrlPath)`在当前位置包含另一文件
 
