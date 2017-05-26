@@ -74,40 +74,40 @@ Java Socket的工作机制：
 NIO 的工作方式*
 ----------------
 ![NIO相关类图](http://o90jubpdi.bkt.clouddn.com/NIO%E7%9B%B8%E5%85%B3%E7%B1%BB%E5%9B%BE.jpg)
-```
+```java
 public void selector() throws IOException{
-			 ByteBuffer buffer = ByteBuffer.allocate(1024);
-			 Selector selector = Selector.open();
-			 ServerSocketChannel ssc = ServerSocketChannel.open();
-			 ssc.configureBlocking(false);//设置为非阻塞方式
-			 ssc.socket().bind(new InetSocketAddress(8080));
-			 ssc.register(selector, SelectionKey.OP_ACCEPT);//注册监听的事件
-			 while (true){
-					 Set selectedKeys = selector.selectedKeys();//取得所有key集合
-					 Iterator it = selectedKeys.iterator();
-					 while (it.hasNext()){
-							 SelectionKey key = (SelectionKey) it.next();
-							 if ((key.readyOps() & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT){
-									 ServerSocketChannel ssChannel = (ServerSocketChannel)key.channel();
-									 SocketChannel sc = ssChannel.accept();//接受到服务器端的请求
-									 sc.configureBlocking(false);
-									 sc.register(selector,SelectionKey.OP_READ);
-									 it.remove();
-							 }else if ((key.readyOps() & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT){
-									 SocketChannel sc = (SocketChannel) key.channel();
-									 while (true){
-											 buffer.clear();
-											 int n = sc.read(buffer);//读取数据
-											 if (n < 0){
-													 break;
-											 }
-											 buffer.flip();
-									 }
-									 it.remove();
-							 }
-					 }        
-			 }
-	 }
+	ByteBuffer buffer = ByteBuffer.allocate(1024);
+	Selector selector = Selector.open();
+	ServerSocketChannel ssc = ServerSocketChannel.open();
+	ssc.configureBlocking(false);//设置为非阻塞方式
+	ssc.socket().bind(new InetSocketAddress(8080));
+	ssc.register(selector, SelectionKey.OP_ACCEPT);//注册监听的事件
+	while (true){
+		Set selectedKeys = selector.selectedKeys();//取得所有key集合
+		Iterator it = selectedKeys.iterator();
+		while (it.hasNext()){
+			SelectionKey key = (SelectionKey) it.next();
+			if ((key.readyOps() & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT){
+				ServerSocketChannel ssChannel = (ServerSocketChannel)key.channel();
+				SocketChannel sc = ssChannel.accept();//接受到服务器端的请求
+				sc.configureBlocking(false);
+				sc.register(selector,SelectionKey.OP_READ);
+				it.remove();
+			}else if ((key.readyOps() & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT){
+				SocketChannel sc = (SocketChannel) key.channel();
+				while (true){
+					buffer.clear();
+					int n = sc.read(buffer);//读取数据
+					if (n < 0){
+						break;
+					}
+					buffer.flip();
+				}
+				it.remove();
+			}
+		}        
+	}
+}
 ```
 调用 Selector 的静态工厂创建一个选择器，创建一个服务端的 Channel 绑定到一个 Socket 对象，并把这个通信信道注册到选择器上，把这个通信信道设置为非阻塞模式。然后就可以调用 Selector 的 selectedKeys 方法来检查已经注册在这个选择器上的所有通信信道是否有需要的事件发生，如果有某个事件发生时，将会返回所有的 SelectionKey，通过这个对象 Channel 方法就可以取得这个通信信道对象从而可以读取通信的数据，而这里读取的数据是 Buffer，这个 Buffer 是我们可以控制的缓冲器。
 
@@ -160,7 +160,7 @@ class AsyncResult implements IAsyncResult{
 		condition_ = lock_.newCondition();//创建一个锁
 		stratTime_ = System.currentTimeMillis();
 	}
-
+    /* 检查需要的数据是否已经返回，如果没有返回阻塞 */
 	public byte[] get(){
 		lock_.lock();
 		try{
@@ -171,16 +171,16 @@ class AsyncResult implements IAsyncResult{
 			return result_;
 		}
 	}
-
+    /*** 检查需要的数据是否已经返回 */ 
 	public boolean isDone(){return done_.get();}
-
+    /*** 检查在指定的时间内需要的数据是否已经返回，如果没有返回抛出超时异常 */ 
 	public byte[] get(long timeout, TimeUnit tu) throws TimeoutException{
 		lock_.lock();
 		try{    boolean bVal = true;
 			try{
 				if (!done_.get()) {
 					long overall_timeout = timeout - (System.currentTimeMillis() - stratTime_);
-					if (overall_timeout > 0) 
+					if (overall_timeout > 0) // 设置等待超时的时间
 						bVal = condition_.await(overall_timeout, TimeUnit.MILLISECONDS);
 					else
 						bVal = false;
@@ -188,7 +188,7 @@ class AsyncResult implements IAsyncResult{
 			}catch(InterruptdException ex){
 				throw new AssertionError(ex);
 			}
-			if (!bVal && !done_.get()) {
+			if (!bVal && !done_.get()) {// 抛出超时异常
 				throw new TimeoutException("Operation timed out.");
 			}
 		}finally{
@@ -196,14 +196,14 @@ class AsyncResult implements IAsyncResult{
 		}
 		return result_;
 	}
-
+    /*** 该函数拱另外一个线程设置要返回的数据，并唤醒在阻塞的线程 */ 
 	public void result(Message response){
 		try{
 			lock_.lock();
 			if (!done_.get()) {
-				result_ = response.getMessageBody();
+				result_ = response.getMessageBody();// 设置返回的数据
 				done_.set(true);
-				condition_.signal();
+				condition_.signal();// 唤醒阻塞的线程
 			}
 		}finally{
 			lock_.lock();
