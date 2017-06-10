@@ -25,44 +25,50 @@ public class StudentsTest {
 
 	@Before
 	public void Init() {
-		//´´½¨ÅäÖÃ¶ÔÏó
+		//Â´Â´Â½Â¨Ã…Ã¤Ã–ÃƒÂ¶Ã”ÃÃ³
 		Configuration configuration = new Configuration().configure();
-		//´´½¨»á»°¹¤³§¶ÔÏó
+		//Â´Â´Â½Â¨Â»Ã¡Â»Â°Â¹Â¤Â³Â§Â¶Ã”ÃÃ³
 		sessionFactory = configuration.buildSessionFactory();
-		//´´½¨»á»°¶ÔÏó
+		//Â´Â´Â½Â¨Â»Ã¡Â»Â°Â¶Ã”ÃÃ³
 		session =sessionFactory.openSession();
-		//¿ªÆôÊÂÎñ
+		//Â¿ÂªÃ†Ã´ÃŠÃ‚ÃÃ±
 		transaction = session.beginTransaction();
 	}
 
 	@After
 	public void destory() {
-		transaction.commit();// Ìá½»ÊÂÎñ
-		session.close();// ¹Ø±Õ¶Ô»°
-		sessionFactory.close();// ¹Ø±Õ»á»°¹¤³§
+		transaction.commit();// ÃŒÃ¡Â½Â»ÃŠÃ‚ÃÃ±
+		session.close();// Â¹Ã˜Â±Ã•Â¶Ã”Â»Â°
+		sessionFactory.close();// Â¹Ã˜Â±Ã•Â»Ã¡Â»Â°Â¹Â¤Â³Â§
 	}
 
 	@Test
 	public void testSaveStudents() {
-		//Students s = new Students(1, "ÕÅÈı·á", "ÄĞ", new Date(), "Îäµ±É½");
+		//Students s = new Students(1, "Ã•Ã…ÃˆÃ½Â·Ã¡", "Ã„Ã", new Date(), "ÃÃ¤ÂµÂ±Ã‰Â½");
 		Students s = new Students();
-		s.setSname("ÕÅÈı·á");
-		//s.setSid(1); //nativeµÄÊ±ºòÒª×¢ÊÍµô
-		s.setGender("ÄĞ");
+		s.setSname("Ã•Ã…ÃˆÃ½Â·Ã¡");
+		//s.setSid(1); //nativeÂµÃ„ÃŠÂ±ÂºÃ²Ã’ÂªÃ—Â¢ÃŠÃÂµÃ´
+		s.setGender("Ã„Ã");
 		s.setBirthday(new Date());
-		//s.setAddress("Îäµ±É½");
-		Address address = new Address("710068","2883232","ËÕÖİÊĞ");
+		//s.setAddress("ÃÃ¤ÂµÂ±Ã‰Â½");
+		Address address = new Address("710068","2883232","Ã‹Ã•Ã–ÃÃŠÃ");
 		s.setAddress(address);
-		session.save(s);// ±£´æ¶ÔÏó½öÊı¾İ¿â
+		session.save(s);// Â±Â£Â´Ã¦Â¶Ã”ÃÃ³Â½Ã¶ÃŠÃ½Â¾ÃÂ¿Ã¢
 
 	}
 	@Test
 	public void testWriteBlob() throws Exception{
-		Students s = new Students(1, "ÕÅÈı·á", "ÄĞ", new Date(), "Îäµ±É½");
+
+		Students s = new Students(1, "Ã•Ã…ÃˆÃ½Â·Ã¡", "Ã„Ã", new Date(), "ÃÃ¤ÂµÂ±Ã‰Â½");
+		//å…ˆè·å¾—ç…§ç‰‡æ–‡ä»¶
 		File file = new File("D:"+ File.separator + "23tree.png");
+		//è·å¾—ç…§ç‰‡æ–‡ä»¶çš„è¾“å…¥æµ
 		InputStream inputStream = new FileInputStream(file);
+		//åˆ›å»ºä¸€ä¸ªBlobå¯¹è±¡
 		Blob image = Hibernate.getLobCreator(session).createBlob(inputStream,inputStream.available());
-		s.setPicture(image);
+		//è®¾ç½®ç…§ç‰‡å±æ€§
+		s.setPicture(image);ã€
+		//ä¿å­˜å­¦ç”Ÿ
 		session.save(s);
 		
 	}
@@ -73,7 +79,7 @@ public class StudentsTest {
 		InputStream input = image.getBinaryStream();
 		File f = new File("D:"+ File.separator + "dest.png");
 		OutputStream output = new FileOutputStream(f);
-		//´´½¨»º³åÇø
+		//Â´Â´Â½Â¨Â»ÂºÂ³Ã¥Ã‡Ã¸
 		byte[] buff = new byte[input.available()];
 		input.read(buff);
 		output.write(buff);

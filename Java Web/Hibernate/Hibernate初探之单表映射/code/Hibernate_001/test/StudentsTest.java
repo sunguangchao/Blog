@@ -16,27 +16,27 @@ public class StudentsTest {
 
 	@Before
 	public void Init() {
-		//创建配置对象
+		//麓麓陆篓脜盲脰脙露脭脧贸
 		Configuration configuration = new Configuration().configure();
-		//创建会话工厂对象
+		//麓麓陆篓禄谩禄掳鹿陇鲁搂露脭脧贸
 		sessionFactory = configuration.buildSessionFactory();
-		//创建会话对象
+		//麓麓陆篓禄谩禄掳露脭脧贸
 		session =sessionFactory.openSession();
-		//开启事务
+		//驴陋脝么脢脗脦帽
 		transaction = session.beginTransaction();
 	}
 
 	@After
 	public void destory() {
-		transaction.commit();// 提交事务
-		session.close();// 关闭对话
-		sessionFactory.close();// 关闭会话工厂
+		transaction.commit();// 脤谩陆禄脢脗脦帽
+		session.close();// 鹿脴卤脮露脭禄掳
+		sessionFactory.close();// 鹿脴卤脮禄谩禄掳鹿陇鲁搂
 	}
 
 	@Test
 	public void testSaveStudents() {
-		Students s = new Students(1, "张三丰", "男", new Date(), "武当山");
-		session.save(s);// 保存对象仅数据库
+		Students s = new Students(1, "脮脜脠媒路谩", "脛脨", new Date(), "脦盲碌卤脡陆");
+		session.save(s);// 卤拢麓忙露脭脧贸陆枚脢媒戮脻驴芒
 
 	}
 	@Test
@@ -54,7 +54,7 @@ public class StudentsTest {
 	@Test
 	public void testUpdateStudents(){
 		Students students = (Students)session.get(Students.class,0);
-		students.setGender("女");
+		students.setGender("脜庐");
 		session.update(students);
 		System.out.println(students);
 	}
