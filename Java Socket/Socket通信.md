@@ -101,8 +101,7 @@ UDP协议以数据包=报作为数据传输的载体
 * DatagramPacket：表示数据报包
 * DatagramSocket：进行端到端通信的类
 
-综合练习：
-JDBC+IO+Socket编写一个控制台版的“文件上传器”，实现文件上传功能。
+综合练习：JDBC+IO+Socket编写一个控制台版的“文件上传器”，实现文件上传功能。
 
 
 
