@@ -80,8 +80,11 @@ public class Vector<E> extends AbstractList<E>
     // 确定Vector的容量
     public synchronized void ensureCapacity(int minCapacity){
         // 将Vector的改变统计数+1
-        modCount++;
-        ensureCapacityHelper(minCapacity);
+        if (minCapacity > 0){
+        	modCount++;
+        	ensureCapacityHelper(minCapacity);
+        }
+
     }
     //设置容量值为 newSize
     public synchronized void setSize(int newSize){
@@ -114,7 +117,6 @@ public class Vector<E> extends AbstractList<E>
 
     // 返回“Vector中全部元素对应的Enumeration”
     public Enumeration<E> elements(){
-
         // 通过匿名类实现Enumeration
         return new Enumeration<E>() {
             int count = 0;
@@ -168,6 +170,7 @@ public class Vector<E> extends AbstractList<E>
 
     //从后向前查找元素(o)。开始位置是从前向后的第index个数；
     //若找到，则返回元素的“索引值”；否则，返回-1。
+    //20170911
     public synchronized int lastIndexOf(Object o, int index){
         if (index >= elementCount)
             throw new IndexOutOfBoundsException(index + " >= " + elementCount);
