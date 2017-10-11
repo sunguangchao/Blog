@@ -186,5 +186,259 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>, RandomAcce
         return Arrays.copyOf(elementData, size);
     }
 
+    @SuppressWarnings("unchecked")
+    public <T> T[] toArray(T[] a){
+        //如果传入的数组长度小于size，返回一个新的数组，大小为size，类型与原来相同
+        if (a.length < size)
+            return (T[]) Arrays.copyOf(elementData, size, a.getClass());
+        //否则，将elementData复制到传入数组，并返回传入数组
+        System.arraycopy(elementData, 0, a, 0, size);
+        //若传入数组长度大于size，把返回数组的第size个元素置为空
+        if (a.length > size)
+            a[size] = null;
+        return a;
 
+    }
+
+    E elementData(int index){
+        return (E) elementData[index];
+    }
+
+    /**
+     * 返回指定位置的元素
+     * @param index
+     * @return
+     */
+    public E get(int index){
+        //范围检查
+        rangeCheck(index);
+        return elementData(index);
+    }
+
+    /**
+     * 将列表中指定位置的元素替换为指定元素，并返回原先位置的元素
+     * @param index
+     * @param element
+     * @return
+     */
+    public E set(int index, E element){
+        rangeCheck(index);
+
+        //简单的替换步骤
+        //E oldValue = (E)elementData[index];
+        E oldValue = elementData(index);
+        elementData[index] = element;
+        return oldValue;
+
+    }
+
+    //在列表尾部添加一个元素，容量的扩展将导致数组元素的复制，多次扩展将执行多次整个数组内容的复制
+    //若能提前判断list的长度，调用ensureCapacity调整容量，将有效的提高运行速度
+    public boolean add(E e){
+        ensureCapacityIntenal(size + 1);//Increments modCount
+        elementData[size++] = e;
+        return true;
+    }
+
+    /**
+     * 在指定位置插入元素，当前位置原元素及所有后继元素向右移动一个位置
+     * @param index
+     * @param element
+     */
+
+    public void add(int index, E element){
+        //判断指定位置index是否超出elementData的界限
+        rangeCheckForAdd(index);
+        ensureCapacityIntenal(size + 1);
+        //调用System.arrayCopy将elementData从index开始到size结束的size-index（长度）个元素复制到index+1至size+1的位置
+        //即将从index开始的元素都往后移动一个位置，然后将index位置的值指向element。
+        System.arraycopy(elementData, index, elementData, index+1, size-index);
+        elementData[index] = element;
+        size++;
+    }
+
+    private void rangeCheck(int index){
+        if (index >= size)
+            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+
+    /**
+     * 删除指定位置的元素，将后继元素向前移动一个位置
+     * @param index
+     * @return
+     */
+    public E remove(int index){
+        rangeCheck(index);
+        modCount++;
+        //保留要被移除的元素
+        E oldValue = elementData(index);
+        int numMoved = size - index - 1;
+        if (numMoved > 0)
+            //将移除位置之后的元素向前挪动一个位置
+            System.arraycopy(elementData, index+1, elementData, index, numMoved);
+        //将list末尾元素置null
+        elementData[--size] = null;
+        //返回被移除的元素
+        return oldValue;
+    }
+
+    /**
+     * 删除首次出现在列表中的元素，如果不包含该元素，则不作变化
+     * @param o
+     * @return
+     */
+    public boolean remove(Object o){
+        if (o == null){
+            for (int i = 0; i < size; i++){
+                if (elementData[i] == null)
+                {
+                    fastRemove(i);
+                    return true;
+                }
+            }
+        }else{
+            for (int i = 0; i < size; i++){
+                if (o.equals(elementData[i])){
+                    fastRemove(i);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 跳过边界检查也不删除值的删除函数
+     * @param index
+     */
+    private void fastRemove(int index){
+        modCount++;
+        int numMoved = size - index - 1;
+        if (numMoved > 0)
+            System.arraycopy(elementData, index+1, elementData, index, numMoved);
+        elementData[--size] = null;//clear to let GC do its work
+    }
+
+    /**
+     * 清空列表中所有元素，操作后列表为空
+     */
+    public void clear(){
+        modCount++;
+        //clear to let GC do its work
+        for (int i = 0; i < size; i++){
+            elementData[i] = null;
+        }
+        size = 0;
+    }
+
+    /**
+     * 将指定集合中的所有元素都添加到列表末尾，以其迭代器返回的顺序添加
+     * !!该操作在多线程情况下行为未定义，需要外部同步
+     * @param c
+     * @return
+     */
+    public boolean addAll(Collection<? extends E> c){
+        //先集合C转换为数组
+        Object[] a = c.toArray();
+        //得到数组的长度
+        int numNew = a.length;
+        //将该数组复制到列表的尾部
+        if (numNew > 0)
+            System.arraycopy(a, 0, elementData, size, numNew);
+        //size实时更新
+        size += numNew;
+        //只要集合c的大小不为空，即转换后数组长度不为0则返回true
+        return numNew != 0;
+    }
+
+    /**
+     * 将指定集合c中所有元素添加到以index开头的位置中，将当前元素及所有
+     * 后继元素向后移动，新元素的顺序以迭代器返回的顺序为准
+     * @param index
+     * @param c
+     * @return
+     */
+    public boolean addAll(int index, Collection<? extends E> c){
+        //检查是否越界
+        rangeCheckForAdd(index);
+        Object[] a = c.toArray();
+        int numNew = a.length;
+        //Increments modCount
+        ensureCapacityIntenal(size + numNew);
+        int numMoved = size - index;
+        //先将index开始的元素向后移动numNew（c转换为数组后的长度）个位置（也是一个复制的过程）
+        //也是为后面的插入留下空间
+        if (numMoved > 0)
+            System.arraycopy(elementData, index, elementData, index + numNew, numMoved);
+        //将数组内容复制到elementData的index到index+numNew
+        System.arraycopy(a, 0, elementData, index, numNew);
+        //更新size
+        size += numNew;
+        return numNew != 0;
+    }
+
+    protected void removeRange(int fromIndex, int toIndex){
+        modCount++;
+        int numMoved = size - toIndex;
+        if (numMoved > 0)
+            System.arraycopy(elementData, toIndex, elementData, fromIndex, numMoved);
+        //移除元素后，列表应该的容量
+        int newSize = size - (toIndex - fromIndex);
+        //将toIndex后的元素置为null，让垃圾收集器进行回收工作
+        for (int i = newSize; i < size; i++)
+            elementData[i] = null;
+
+        size = newSize;
+    }
+
+    private void rangeCheckForAdd(int index){
+        if (index > size || index < 0)
+            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+    private String outOfBoundsMsg(int index){
+        return "Index: " + index + ", Size: " + size;
+    }
+
+    public boolean removeAll(Collection<?> c){
+        //当传入的参数不为null时，返回参数本身，反之抛出NullPointException异常
+        Objects.requireNonNull(c);
+        return batchRemove(c, false);
+    }
+
+    public boolean retainAll(Collection<?> c){
+        Objects.requireNonNull(c);
+        return batchRemove(c, true);
+    }
+
+    /**
+     * ???
+     * 批量删除
+     * complement为false，则为删除列表中出现在集合c中的元素
+     * complement为true，则为删除列表中未出现在集合c中的元素
+     */
+    private boolean batchRemove(Collection<?> c, boolean complement){
+        final Object[] elementData = this.elementData;
+        int r = 0, w = 0;//w代表批量删除后，还剩多少元素
+        boolean modified = false;
+        try{
+            //高效保存两个结合公有元素的算法
+            for (; r < size; r++)
+                if (c.contains(elementData[r]) == complement)
+                    elementData[w++] = elementData[r];
+        }finally {
+            if (r != size){
+                System.arraycopy(elementData, r, elementData, w, size-r);
+                w += size - r;
+            }
+            if (w != size){
+                for (int i = w; i < size; i++){
+                    elementData[i] = null;
+                }
+                modCount += size - w;
+                size = w;
+                modified = true;
+            }
+        }
+        return modified;
+    }
 }
