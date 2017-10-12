@@ -1,5 +1,7 @@
 
+
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * Created by 11981 on 2017/9/10.
@@ -50,39 +52,53 @@ public class Vector<E> extends AbstractList<E>
         System.arraycopy(elementData, 0, anArray, 0, elementCount);
     }
 
-    // 将当前容量值设为 =实际元素个数
+    // 将当前容量值设为 = 实际元素个数
     public synchronized void tirmToSize(){
         modCount++;
         int oldCapacity = elementData.length;
         if (elementCount < oldCapacity){
-            //Arrays.copyOf ?
             elementData = Arrays.copyOf(elementData, elementCount);
         }
     }
 
     // 确认“Vector容量”的帮助函数
     private void ensureCapacityHelper(int minCapacity){
-        int oldCapacity = elementData.length;
+        if (minCapacity - elementData.length > 0)
+            grow(minCapacity);
+    }
+    private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
+
+    /**
+     * 容量增长函数
+     * @param minCapacity
+     */
+    private void grow(int minCapacity){
         // 当Vector的容量不足以容纳当前的全部元素，增加容量大小。
         // 若 容量增量系数>0(即capacityIncrement>0)，则将容量增大capacityIncrement
         // 否则，将容量增大一倍
-        if (minCapacity > oldCapacity){
-            Object[] oldData = elementData;
-            int newCapacity = (capacityIncrement > 0) ?
-                    (oldCapacity + capacityIncrement) : (oldCapacity * 2);
-            if (newCapacity < minCapacity){
-                newCapacity = minCapacity;
-            }
-            elementData = Arrays.copyOf(elementData, newCapacity);
-        }
+        int oldCapacity = elementData.length;
+        int newCapacity = oldCapacity + ((capacityIncrement > 0) ? capacityIncrement : oldCapacity);
+
+        if (newCapacity - minCapacity < 0)
+            newCapacity = minCapacity;
+        if (newCapacity - MAX_ARRAY_SIZE < 0)
+            newCapacity = hugeCapacity(minCapacity);
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+
+    private static int hugeCapacity(int minCapacity){
+        if (minCapacity < 0)
+            throw new OutOfMemoryError();
+        return (minCapacity > MAX_ARRAY_SIZE) ?
+                Integer.MAX_VALUE : MAX_ARRAY_SIZE;
     }
 
     // 确定Vector的容量
     public synchronized void ensureCapacity(int minCapacity){
         // 将Vector的改变统计数+1
         if (minCapacity > 0){
-        	modCount++;
-        	ensureCapacityHelper(minCapacity);
+            modCount++;
+            ensureCapacityHelper(minCapacity);
         }
 
     }
@@ -117,6 +133,7 @@ public class Vector<E> extends AbstractList<E>
 
     // 返回“Vector中全部元素对应的Enumeration”
     public Enumeration<E> elements(){
+
         // 通过匿名类实现Enumeration
         return new Enumeration<E>() {
             int count = 0;
@@ -125,6 +142,7 @@ public class Vector<E> extends AbstractList<E>
                 return count < elementCount;
             }
 
+            //获取下一个元素
             @Override
             public E nextElement() {
                 synchronized (Vector.this){
@@ -145,6 +163,7 @@ public class Vector<E> extends AbstractList<E>
     // 从index位置开始向后查找元素(o)。
     // 若找到，则返回元素的索引值；否则，返回-1
     public synchronized int indexOf(Object o, int index){
+        //如果查找元素为null，则正向遍历出等于null的下标
         if (o == null){
             for (int i = index; i < elementCount; i++)
                 if (elementData[i] == null)
@@ -163,14 +182,13 @@ public class Vector<E> extends AbstractList<E>
         return indexOf(o, 0);
     }
 
-    // 从后向前查找元素(o)。并返回元素的索引
+    // 从后向前查找元素(o)，并返回元素的索引
     public synchronized int lastIndexOf(Object o){
         return lastIndexOf(o, elementCount-1);
     }
 
     //从后向前查找元素(o)。开始位置是从前向后的第index个数；
     //若找到，则返回元素的“索引值”；否则，返回-1。
-    //20170911
     public synchronized int lastIndexOf(Object o, int index){
         if (index >= elementCount)
             throw new IndexOutOfBoundsException(index + " >= " + elementCount);
@@ -230,6 +248,7 @@ public class Vector<E> extends AbstractList<E>
             throw new ArrayIndexOutOfBoundsException(index);
         }
         int j = elementCount - index - 1;
+        //把列表中从index+1位置的元素移动到index
         if (j > 0){
             System.arraycopy(elementData, index+1, elementData, index, j);
 
@@ -245,8 +264,12 @@ public class Vector<E> extends AbstractList<E>
             throw new ArrayIndexOutOfBoundsException(index + " >= " + elementCount);
 
         }
+        //开辟足够的空间
         ensureCapacityHelper(elementCount + 1);
+        //复制生成一个数组，索引为index的位置为空，后面进行赋值
         System.arraycopy(elementData, index, elementData, index+1, elementCount-index);
+        elementData[index] = obj;
+        elementCount++;
     }
 
 
@@ -271,13 +294,14 @@ public class Vector<E> extends AbstractList<E>
     // 删除Vector中的全部元素
     public synchronized void removeAllElements(){
         modCount++;
+        // let gc do its work
         for (int i=0; i < elementCount; i++)
             elementData[i] = null;
         elementCount = 0;
     }
 
 
-    // 克隆函数
+    // 克隆函数，返回一个指向克隆对象的引用，而不是指向原来对象的引用
     public synchronized Object clone(){
         try {
             Vector<E> v = (Vector<E>) super.clone();
@@ -306,6 +330,12 @@ public class Vector<E> extends AbstractList<E>
         if (a.length > elementCount)
             a[elementCount] = null;
         return a;
+    }
+    public synchronized E get(int index){
+        if (index > elementCount){
+            throw new ArrayIndexOutOfBoundsException(index);
+        }
+        return (E)elementData[index];
     }
 
     // 设置index位置的值为element。并返回index位置的原始值
@@ -336,6 +366,11 @@ public class Vector<E> extends AbstractList<E>
         insertElementAt(element, index);
     }
 
+    /**
+     * 删除index位置的元素，并返回index位置的原始值
+     * @param index
+     * @return
+     */
     public synchronized E remove(int index){
         modCount++;
         if (index >= elementCount)
@@ -363,7 +398,7 @@ public class Vector<E> extends AbstractList<E>
         modCount++;
         Object[] a = c.toArray();
         int numNew = a.length;
-        ensureCapacityHelper(elementCount = numNew);
+        ensureCapacityHelper(elementCount + numNew);
         System.arraycopy(a, 0, elementData, elementCount, numNew);
         elementCount += numNew;
         return numNew != 0;
@@ -375,7 +410,7 @@ public class Vector<E> extends AbstractList<E>
     }
 
     // 删除“非集合c中的元素”
-    public synchronized boolean retianAll(Collection<?> c){
+    public synchronized boolean retainAll(Collection<?> c){
         return super.retainAll(c);
     }
 
@@ -408,8 +443,11 @@ public class Vector<E> extends AbstractList<E>
     }
 
     // 获取Vector中fromIndex(包括)到toIndex(不包括)的子集
-    public synchronized List<E> subList(int fromIndex, int toIndex){
-        return Collections.synchronizedList(super.subList(fromIndex,toIndex), this);
+//    public synchronized List<E> subList(int fromIndex, int toIndex){
+//       ?? return Collections.synchronizedList(super.subList(fromIndex,toIndex), this);
+//    }
+    public synchronized List<E> subList(int fromIndex, int toIndex) {
+        return Collections.synchronizedList(super.subList(fromIndex, toIndex));
     }
 
     protected synchronized void removeRange(int fromIndex, int toIndex){
@@ -423,7 +461,143 @@ public class Vector<E> extends AbstractList<E>
 
     private synchronized void writeObject(java.io.ObjectOutputStream s)
     throws java.io.IOException{
+        final java.io.ObjectOutputStream.PutField fields = s.putFields();
+        final Object[] data;
+        synchronized (this){
+            fields.put("capacityIncrement", capacityIncrement);
+            fields.put("elementCount", elementCount);
+            data = elementData.clone();
+        }
+        fields.put("elementData", data);
         s.defaultWriteObject();
     }
+
+    public synchronized ListIterator<E> listIterator(int index){
+        if (index < 0 || index > elementCount)
+            throw new IndexOutOfBoundsException("Index:" + index);
+        return new ListItr(index);
+    }
+
+    public synchronized ListIterator<E> listIterator(){
+        return new ListItr(0);
+    }
+
+    public synchronized Iterator<E> iterator(){
+        return new Itr();
+    }
+
+    private class Itr implements Iterator<E>{
+        int cursor;  //index of next element to return
+        int lastRet = -1;//index of last element to return
+        int expectedModCount = modCount;
+
+        public boolean hasNext(){
+            return cursor != elementCount;
+        }
+        public E next(){
+            synchronized (Vector.this){
+                checkForComodification();
+                int i = cursor;
+                if (i >= elementCount)
+                    throw new NoSuchElementException();
+                cursor = i + 1;
+                return (E)elementData[lastRet = i];
+            }
+        }
+        public void remove(){
+            if(lastRet == -1){
+                throw new IllegalStateException();
+            }
+            synchronized (Vector.this){
+                checkForComodification();
+                Vector.this.remove(lastRet);
+                expectedModCount = modCount;
+            }
+        }
+
+        public void forEachRemaining(Consumer<? super E> action){
+            Objects.requireNonNull(action);
+            synchronized (Vector.this){
+                final int size = elementCount;
+                int i = cursor;
+                if (i >= size){
+                    return;
+                }
+                final E[] elementData = (E[])Vector.this.elementData;
+                if (i > elementData.length)
+                    throw new ConcurrentModificationException();
+                while (i != size && modCount == expectedModCount){
+                    action.accept(elementData[i]);
+                }
+                cursor = i;
+                lastRet = i-1;
+                checkForComodification();
+            }
+        }
+
+        final void checkForComodification(){
+            if (modCount != expectedModCount)
+                throw new ConcurrentModificationException();
+        }
+    }
+
+    final class ListItr extends Itr implements ListIterator<E>{
+        ListItr(int index){
+            super();
+            cursor = index;
+        }
+        public boolean hasPrevious(){
+            return cursor != 0;
+        }
+        public int nextIndex(){
+            return cursor;
+        }
+        public int previousIndex(){
+            return cursor - 1;
+        }
+        public E previous(){
+            synchronized (Vector.this){
+                int i = cursor - 1;
+                if (i < 0)
+                    throw new NoSuchElementException();
+                cursor = i;
+                return (E)elementData[lastRet - 1];
+            }
+        }
+        public void set(E e){
+            if (lastRet == -1)
+                throw new IllegalStateException();
+            synchronized (Vector.this){
+                checkForComodification();
+                Vector.this.set(lastRet, e);
+            }
+        }
+
+        public void add(E e){
+            int i = cursor;
+            synchronized (Vector.this){
+                checkForComodification();
+                Vector.this.add(i,e);
+                expectedModCount = modCount;
+            }
+            cursor = i + 1;
+            lastRet = -1;
+        }
+    }
+
+    public synchronized void forEach(Consumer<? super E> action){
+        Objects.requireNonNull(action);
+        final int expectedModCount = modCount;
+        final E[] elementData = (E[])this.elementData;
+        final int elementCount = this.elementCount;
+        for (int i=0; elementCount == expectedModCount && i < elementCount; i++){
+            action.accept(elementData[i]);
+        }
+        if (modCount != expectedModCount){
+            throw new ConcurrentModificationException();
+        }
+    }
+
+    //未完待续
 
 }
