@@ -14,6 +14,7 @@ public class UseMappedFile {
     public static void main(String[] args) throws Exception{
         RandomAccessFile raf = new RandomAccessFile("E:\\test\\readme.txt", "rw");
         FileChannel fc = raf.getChannel();
+        //将一个FileChannel映射到内存中
         MappedByteBuffer mbb = fc.map(FileChannel.MapMode.READ_ONLY, start, end);
 
         mbb.put(0, (byte) 97);

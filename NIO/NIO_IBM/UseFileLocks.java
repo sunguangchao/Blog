@@ -24,11 +24,9 @@ public class UseFileLocks {
         }catch (InterruptedException e){
 
         }
-
         System.out.println("going to release lock");
         lock.release();
         System.out.println("release lock");
         raf.close();
-
     }
 }

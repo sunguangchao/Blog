@@ -31,16 +31,19 @@ public class MultiPortEcho {
             ServerSocketChannel ssc = ServerSocketChannel.open();
             //设置为非阻塞
             ssc.configureBlocking(false);
+            //将它绑定到给定端口
             ServerSocket ss = ssc.socket();
             InetSocketAddress address = new InetSocketAddress(ports[i]);
             ss.bind(address);
 
+            //将新打开的ServerSocketChannel注册到selector.
             SelectionKey key = ssc.register(selector, SelectionKey.OP_ACCEPT);
             System.out.println("Going to listen on "+ ports[i]);
         }
 
         while (true){
             //The number of keys, possibly zero,whose ready-operation sets were updated
+            //select()这个方法会阻塞，直到至少有一个已注册的事件发生
             int num = selector.select();
             Set selectedKeys = selector.selectedKeys();
             Iterator it = selectedKeys.iterator();
@@ -48,6 +51,7 @@ public class MultiPortEcho {
             while (it.hasNext()){
                 SelectionKey key = (SelectionKey)it.next();
                 //readyOps(): return this key's ready-operation set
+                //想要监听accept事件
                 if ((key.readyOps() & SelectionKey.OP_ACCEPT) == SelectionKey.OP_ACCEPT){
                     //return the key's channel and transfer to ServerSocketChannel
                     ServerSocketChannel ssc = (ServerSocketChannel) key.channel();

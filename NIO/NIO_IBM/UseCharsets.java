@@ -30,10 +30,12 @@ public class UseCharsets {
         MappedByteBuffer inputData = inc.map(FileChannel.MapMode.READ_ONLY, 0, inputLength);
 
         Charset latin1 = Charset.forName("ISO-8859-1");
+        //创建一个解码器和编码器
         CharsetDecoder decoder = latin1.newDecoder();
         CharsetEncoder encoder = latin1.newEncoder();
 
         CharBuffer cb = decoder.decode(inputData);
+        //使用 CharsetEncoder 将它转换回字节：
         ByteBuffer outputData = encoder.encode(cb);
 
         outc.write(outputData);
