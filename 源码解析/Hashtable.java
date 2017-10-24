@@ -2,6 +2,8 @@ package JDK;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 
 /**
  * Created by 11981 on 2017/10/22.
@@ -374,6 +376,12 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             Hashtable.this.clear();
         }
     }
+    /**
+     * 返回Map中映射的集合Set，Map中的改变会反映在Set中，反之亦是如此。
+     * 迭代器遍历Set时，如果Map结构发生变化，迭代器行为未定义，除了通过迭代器自身的remove操作和setValue操作
+     * 该Set支持通过Iterator.remove,Set.remove, removeAll, retainAll和clear操作删除元素
+     * 不支持add和addAll操作
+     */
     public Set<Map.Entry<K, V>> entrySet(){
         if (entrySet() == null)
             entrySet = Collections.synchronizedSet(new EntrySet());
@@ -381,6 +389,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
     }
 
     private class EntrySet extends AbstractSet<Map.Entry<K,V>>{
+        //返回Entry的迭代器
         public Iterator<Map.Entry<K,V>> iterator(){
             return getIterator(ENTRIES);
         }
@@ -389,7 +398,9 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             return super.add(o);
         }
 
+        //是否包含该entry
         public boolean contains(Object o){
+            //确定类型
             if (!(o instanceof Map.Entry))
                 return false;
             Map.Entry<?,?> entry = (Map.Entry<?,?>)o;
@@ -440,6 +451,9 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
 
     }
 
+    //返回Map中所有值的集合视图，Map中的任何修改都会反映在集合中，反之亦是如此。如果集合遍历过程中，
+    // Map发生了结构上的修改，迭代类型未定义
+
     public Collection<V> values(){
         if (values() == null)
             values = Collections.synchronizedCollection(new ValueCollection());
@@ -464,6 +478,149 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             Hashtable.this.clear();
         }
     }
+
+    //比较指定对象和当前Map判断是否相等
+    public synchronized boolean equals(Object o){
+        //同一个元素
+        if (o == this){
+            return true;
+        }
+
+        if (!(o instanceof Map))
+            return false;
+        Map<?, ?> t = (Map<?,?>)o;
+        if (t.size() != size())
+            return false;
+        try {
+            Iterator<Map.Entry<K,V>> i = entrySet().iterator();
+            while (i.hasNext()){
+                Map.Entry<K,V> e = i.next();
+                K key = e.getKey();
+                V value = e.getValue();
+                if (value == null) {
+                    if (!(t.get(key) == null && t.containsKey(key)))
+                        return false;
+
+                }else{
+                    if (!value.equals(t.get(key)))
+                        return false;
+                }
+            }
+
+        }catch (ClassCastException e){
+            return false;
+        }catch (NullPointerException e){
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 返回Map的哈希值，Map中的每一个Entry的哈希值相加
+     * @return
+     */
+    public synchronized int hashCode(){
+        int h = 0;
+        if (count == 0 || loadFactor > 0){
+            return h;
+        }
+        loadFactor = -loadFactor;// mark hashCode computation in progress
+        Entry<?,?>[] tab = table;
+        for (Entry<?, ?> entry : tab){
+            while (entry != null){
+                h += entry.hashCode();
+                entry = entry.next;
+            }
+        }
+        loadFactor = - loadFactor;// mark hashCode computation completed
+        return h;
+    }
+
+    public synchronized V getOrDefault(Object key, V defaultValue){
+        V result = get(key);
+        return (null ==result) ? defaultValue : result;
+    }
+
+    public synchronized void forEach(BiConsumer<? super K, ? super V> action){
+        Objects.requireNonNull(action);//explicit check required in case table is empty;
+
+        final int expectedModCount = modCount;
+
+        Entry<?, ?>[] tab = table;
+        for (Entry<?, ?> entry : tab){
+            while (entry != null){
+                action.accept((K)entry.key, (V)entry.value);
+                entry = entry.next;
+
+                if (expectedModCount != modCount){
+                    throw new ConcurrentModificationException();
+                }
+            }
+        }
+
+    }
+
+    public synchronized void replaceAll(BiFunction<? super K, ? super V, ? extends V> function){
+        Objects.requireNonNull(function);//explicit check required in case table is empty;
+        final int expectedModCount = modCount;
+
+        Entry<K,V>[] tab = (Entry<K, V>[]) table;
+        for (Entry<K,V> entry : tab){
+            while (entry != null){
+                entry.value = Objects.requireNonNull(function.apply(entry.key, entry.value));
+                entry = entry.next;
+                if (expectedModCount != modCount)
+                    throw new ConcurrentModificationException();
+            }
+        }
+
+    }
+
+
+    //存在key就更新，不存在就添加
+    public synchronized V putIfAbsent(K key, V value){
+        Objects.requireNonNull(value);
+        Entry<?, ?>tab[] = table;
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        Entry<K,V> entry = (Entry<K, V>) tab[index];
+        //如果存在
+        for (; entry != null; entry = entry.next){
+            if ((entry.hash == hash) && entry.key.equals(key)){
+                V oldValue = entry.value;
+                if (oldValue == null)
+                    entry.value = value;
+                return oldValue;
+            }
+        }
+        //如果不存在，就添加新的entry
+        addEntry(hash, key, value, index);
+        return null;
+    }
+    //删除指定的键值对
+    public synchronized boolean remove(Object key, Object value){
+        Objects.requireNonNull(value);
+
+        Entry<?,?> tab[] = table;
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        Entry<K,V> e = (Entry<K, V>) tab[index];
+        for (Entry<K,V> prev = null; e != null; prev = e, e = e.next){
+            if ((e.hash == hash) && e.key.equals(key) && e.value.equals(value)){
+                modCount ++;
+                if (prev == null){
+                    tab[index] = e.next;
+                }else{
+                    prev.next = e.next;
+                }
+                count--;
+                e.value = null;
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     private static class Entry<K,V> implements Map.Entry<K,V>{
         final int hash;
