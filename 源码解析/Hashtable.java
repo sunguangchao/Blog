@@ -1,9 +1,12 @@
 package JDK;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.StreamCorruptedException;
 import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Created by 11981 on 2017/10/22.
@@ -621,12 +624,240 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         return false;
     }
 
+    /**
+     * 替换旧值为新值，如果key对应的值不等于旧值，旧不替换
+     * @param key
+     * @param oldValue
+     * @param newValue
+     * @return
+     */
+    public synchronized boolean replace(K key, V oldValue, V newValue){
+        Objects.requireNonNull(oldValue);
+        Objects.requireNonNull(newValue);
+        Entry<?, ?> tab[] = table;
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        Entry<K,V> e = (Entry<K, V>) tab[index];
+        for (; e != null; e = e.next){
+            if ((e.hash == hash) && e.key.equals(key)){
+                if (e.value.equals(oldValue)){
+                    e.value = newValue;
+                    return true;
+                }else{
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
 
+    //替换旧值，如果不存在key，则返回null
+    public synchronized V replace(K key, V value){
+        Objects.requireNonNull(value);
+        Entry<?,?> tab[] = table;
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        Entry<K,V> e = (Entry<K, V>) tab[index];
+        for (; e != null; e = e.next){
+            if ((e.hash == hash) && e.key.equals(key)){
+                V oldValue = e.value;
+                e.value = value;
+                return value;
+            }
+        }
+        return null;
+    }
+
+    //如果不存在Key，就添加键值对key-value，value通过mappingFunction计算得到
+    public synchronized V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction){
+        Objects.requireNonNull(mappingFunction);//如果为null，抛出异常
+        Entry<?,?> tab[] = table;
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        Entry<K,V> e = (Entry<K, V>) tab[index];
+        for (; e != null; e = e.next){
+            if ((e.hash == hash)&&e.key.equals(key)){
+                return e.value;
+            }
+        }
+        V newValue = mappingFunction.apply(key);
+        if (newValue != null){
+            addEntry(hash, key, newValue, index);
+        }
+        return newValue;
+    }
+    //如果存在就替换Key的value值，value通过mappingFunction计算得到，如果计算得到的value为null，就删除Key对应的Entry
+    public synchronized V computeIfPresent(K key, BiFunction<? super K ,? super V, ? extends V> remappingFunction){
+        Objects.requireNonNull(remappingFunction);
+
+        Entry<?,?> tab[] = table;
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        @SuppressWarnings("unchecked")
+        Entry<K,V> e = (Entry<K,V>)tab[index];
+        for (Entry<K,V> prev = null; e != null; prev = e, e = e.next){
+            if (e.hash == hash && e.key.equals(key)){
+                V newValue = remappingFunction.apply(key, e.value);
+                if (newValue == null){
+                    modCount++;
+                    if (prev != null){
+                        prev.next = e.next;
+                    }else{
+                        tab[index] = e.next;
+                    }
+                    count--;
+                }else{
+                    e.value = newValue;
+                }
+                return newValue;
+            }
+
+        }
+        return null;
+    }
+
+    public synchronized V compute(K key, BiFunction<? super K ,? super V, ? extends V> remappingFunction){
+        Objects.requireNonNull(remappingFunction);
+
+        Entry<?,?> tab[] = table;
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        @SuppressWarnings("unchecked")
+        Entry<K,V> e = (Entry<K,V>)tab[index];
+        for (Entry<K,V> prev = null; e != null; prev = e, e = e.next){
+            if (e.hash == hash && Objects.equals(e.key, key)){
+                V newValue = remappingFunction.apply(key, e.value);
+                if (newValue == null){
+                    modCount++;
+                    if (prev == null){
+                        tab[index] = e.next;
+                    }else{
+                        prev.next = e.next;
+                    }
+                    count--;
+                }else{
+                    e.value = newValue;
+                }
+                return newValue;
+            }
+
+        }
+        V newValue = remappingFunction.apply(key, null);
+        if (newValue != null){
+            addEntry(hash, key, newValue, index);
+        }
+        return newValue;
+    }
+
+    public synchronized V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction){
+        Objects.requireNonNull(remappingFunction);
+        Entry<?,?> tab[] = table;
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        @SuppressWarnings("unchecked")
+        Entry<K,V> e = (Entry<K,V>)tab[index];
+        for (Entry<K,V> prev = null; e != null; prev=e, e = e.next){
+            if (e.hash == hash && e.key.equals(key)){
+                V newValue = remappingFunction.apply(e.value, value);
+                if (newValue == null){
+                    modCount++;
+                    if (prev == null){
+                        tab[index] = e.next;
+                    }else{
+                        prev.next = e.next;
+                    }
+                    count--;
+                }else{
+                    e.value = newValue;
+                }
+                return newValue;
+            }
+        }
+        if (value != null){
+            addEntry(hash, key, value, index);
+        }
+        return value;
+
+    }
+
+    /**
+     * 将Hashtable的状态保存进流中
+     * @param s
+     * @throws IOException
+     */
+    private void writeObject(java.io.ObjectOutputStream s) throws IOException{
+        Entry<Object, Object> entryStack = null;
+        synchronized (this){
+            s.defaultWriteObject();
+            s.writeInt(table.length);
+            s.writeInt(count);
+            for (int index = 0; index < table.length; index++){
+                Entry<?, ?> entry = table[index];
+                while (entry != null){
+                    entryStack = new Entry<>(0, entry.key, entry.value, entryStack);
+                    entry = entry.next;
+                }
+            }
+        }
+    }
+
+    //从流中读取Hashtable
+    private void readObject(java.io.ObjectInputStream s) throws IOException, ClassNotFoundException{
+        // Read in the length, threshold, and loadfactor
+        s.defaultReadObject();
+        // Read the original length of the array and number of elements
+        int origlength = s.readInt();
+        int elements = s.readInt();
+        int length = (int)(elements * loadFactor) + (elements/20) + 3;
+        if (length > elements && (length & 1) == 0){
+            length--;
+        }
+        if (origlength > 0 && length > origlength){
+            length = origlength;
+        }
+        table = new Entry<?,?>[length];
+        threshold = (int)Math.min(length * loadFactor, MAX_ARRAY_SIZE+1);
+        count = 0;
+
+        for (; elements > 0; elements--){
+            K key = (K)s.readObject();
+            V value = (V)s.readObject();
+            reconstitutionPut(table, key, value);
+        }
+    }
+
+    /**
+     * readObject使用的put方法（重建put），因为put方法支持重写，并且子类尚未初始化的时候不能调用put方法，所以就提供了reconstitutionPut
+     * 它和常规put方法有几点不同，不检测rehash,因为初始元素数目已知。modCount不会自增，因为我们是在创建一个新的实例。
+     * 不需要返回值
+     */
+    private void reconstitutionPut(Entry<?,?>[] tab, K key, V value) throws StreamCorruptedException{
+        if (value == null)
+            throw new StreamCorruptedException();
+        int hash = key.hashCode();
+        int index = (hash & 0x7FFFFFFF) % tab.length;
+        for (Entry<?,?> e = tab[index]; e != null; e = e.next){
+            //如果反序列化过程中出现key值重复，则抛出StreamCorruptedException异常
+            if ((e.hash == hash) && e.key.equals(key)){
+                throw new StreamCorruptedException();
+            }
+        }
+
+        //创建新的Entry
+        Entry<K, V> e = (Entry<K, V>) tab[index];
+        tab[index] = new Entry<>(hash, key, value, e);
+        count++;
+    }
+
+
+    /**
+     * Hashtable使用单向链表Entry解决哈希冲突
+     */
     private static class Entry<K,V> implements Map.Entry<K,V>{
-        final int hash;
-        final K key;
-        V value;
-        Entry<K,V> next;
+        final int hash;//哈希值，不可变
+        final K key;//关键字，不可变
+        V value;//值，可变
+        Entry<K,V> next;//链表中指向下一个的节点
 
         protected Entry(int hash, K key, V value, Entry<K,V> next){
             this.hash = hash;
@@ -635,6 +866,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             this.next = next;
         }
 
+        //返回一个自身的复制对象，浅拷贝，没有新建key和value对象
         protected Object clone(){
             return new Entry<>(hash, key, value, (next == null ? null : (Entry<K,V>)next.clone()));
         }
@@ -656,7 +888,7 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             //返回原先的值
             return oldValue;
         }
-
+        //重写equals方法
         public boolean equals(Object o){
             if (!(o instanceof Map.Entry))
                 return false;
@@ -690,6 +922,10 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
         //表明当前枚举是作为一个迭代器还是一个枚举类型（true表示迭代器）
         boolean iterator;
 
+        /**
+         * 迭代器认为Hashtable应该拥有的modCount值。
+         * 如果期望的不一致，迭代器就检测到并发修改了
+         */
         protected int exceptedModCount = modCount;
 
         Enumerator(int type, boolean iterator){
@@ -714,14 +950,17 @@ public class Hashtable<K,V> extends Dictionary<K,V> implements Map<K,V>, Cloneab
             Entry<?, ?> et = entry;
             int i = index;
             Entry<?,?>[] t = table;
+            //上一个返回元素为空，表明开始返回第一个元素
             while (et == null && i > 0){
                 et = t[--i];
             }
             entry = et;
             index = i;
             if (et != null){
+                //更新上一个返回元素为当前即将返回的元素
                 Entry<?,?> e = lastReturned = entry;
                 entry = e.next;
+                //类型为keys则返回Key，为value则返回value，否则返回Entry
                 return type == KEYS ? (T)e.key : (type == VALUES ? (T)e.value : (T)e);
             }
             throw new NoSuchElementException("Hashtable Enumeration");
