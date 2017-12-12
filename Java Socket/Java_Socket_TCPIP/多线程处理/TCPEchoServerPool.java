@@ -11,12 +11,14 @@ import java.util.logging.Logger;
  */
 public class TCPEchoServerPool {
     public static void main(String[] args) throws IOException{
-        if (args.length != 2){
-            throw new IllegalArgumentException("Parameters:<Port><Threads>");
-        }
-
-        int echoServPort = Integer.parseInt(args[0]);
-        int threadPoolSize = Integer.parseInt(args[1]);
+//        if (args.length != 2){
+//            throw new IllegalArgumentException("Parameters:<Port><Threads>");
+//        }
+//
+//        int echoServPort = Integer.parseInt(args[0]);
+//        int threadPoolSize = Integer.parseInt(args[1]);
+        int echoServPort = 8888;
+        int threadPoolSize = 3;
         final ServerSocket servSock = new ServerSocket(echoServPort);
         final Logger logger = Logger.getLogger("practical");
         for (int i=0; i < threadPoolSize; i++){
@@ -25,6 +27,7 @@ public class TCPEchoServerPool {
                 public void run() {
                     while (true){
                         try {
+                            System.out.println("wait for connect...");
                             Socket clnSock = servSock.accept();
                             EchoProtocal.handleEchoClient(clnSock, logger);
                         }catch (IOException ex){
