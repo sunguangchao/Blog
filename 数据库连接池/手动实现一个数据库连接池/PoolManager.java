@@ -12,7 +12,7 @@ public class PoolManager {
      * 内部类单例模式，产生使用对象
      * 仿造类加载器的互斥性表现完美解决线程安全问题
      */
-    public static MyPoolImpl getInsance(){
+    public static MyPoolImpl getInstance(){
         return createPool.poolImpl;
     }
 }

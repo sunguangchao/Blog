@@ -31,15 +31,17 @@ public class MyPoolImpl implements IMyPool {
     }
 
     private void init(){
-        InputStream in = MyPoolImpl.class.getClassLoader().getResourceAsStream("");
+        InputStream in = MyPoolImpl.class.getClassLoader().getResourceAsStream("db_pools/JDBCPool.properties");
         Properties prop = new Properties();
         try {
             prop.load(in);
         }catch (IOException e){
             e.printStackTrace();
         }
-        driver = prop.getProperty("jdbcDirver");
+        driver = prop.getProperty("jdbcDriver");
+        System.out.println(driver);
         url = prop.getProperty("jdbcurl");
+        System.out.println(url);
         user = prop.getProperty("userName");
         password = prop.getProperty("password");
         if (Integer.valueOf(prop.getProperty("initCount")) > 0){
@@ -54,6 +56,7 @@ public class MyPoolImpl implements IMyPool {
             Driver dbDriver = (Driver) Class.forName(driver).newInstance();
             DriverManager.registerDriver(dbDriver);
 
+
         }catch (ClassNotFoundException | InstantiationException | IllegalAccessException e){
             e.printStackTrace();
         }catch (SQLException e1){
@@ -67,15 +70,16 @@ public class MyPoolImpl implements IMyPool {
     @Override
     public PooledConnection getConnection() {
         if(pooledConnections.size() == 0){
-            System.out.println("获取数据库连接管道");
+            //Spring思想体现，当我们的机制失效时，手动刷一把
+            System.out.println("获取数据库连接管道失败，没有任何管道！");
             createConnections(initCount);
 
         }
         PooledConnection connection = getRealConnection();
-        //生产和消费者模式当中
+        //生产和消费者模式当中if可能产生死锁
         while (connection == null){
             createConnections(stepSize);
-            connection = getConnection();
+            connection = getRealConnection();
             try {
                 //减少竞争
                 Thread.sleep(30);
@@ -83,7 +87,7 @@ public class MyPoolImpl implements IMyPool {
                 e.printStackTrace();
             }
         }
-        return null;
+        return connection;
     }
 
     /**
@@ -99,9 +103,9 @@ public class MyPoolImpl implements IMyPool {
                 Connection connection = conn.getConnection();
                 try {
                     //原理：对数据发送一个命令，能否在规定时间内收到回应true
-                    if (connection.isValid(2000)){
+//                    if (!connection.isValid(2000)){
                         connection = DriverManager.getConnection(url, user, password);
-                    }
+//                    }
                 }catch (SQLException e){
                     e.printStackTrace();
                 }
