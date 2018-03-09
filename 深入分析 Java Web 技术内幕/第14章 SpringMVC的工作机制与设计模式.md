@@ -1,0 +1,20 @@
+DispatcherServelt类继承了HttpServlet，在Servlet的init方法调用时DispatcherServlet执行Spring MVC的初始化工作。
+
+Spring容器的创建是在FrameworkServlet的initServletBean()方法中完成的，这个方法会创建WebApplicationContext对象，并调用refresh()方法来完成配置文件的加载。Srpring容器在加载时会调用DispatcherServlet的initStrategies方法来完成DispatcherServlet中定义的初始化工作。在initStrategies方法中会初始化Spring MVC框架需要的8个组件，这8个组件对应的8个Bean对象都保存在DispatcherServlet类中。
+
+
+Control设计
+==========
+HandlerMapping初始化
+--------
+HandlerMapping的作用就是帮助我们管理URL和处理类的映射关系，就是将一个或者多个URL映射到一个或多个Spring Bean中。
+
+HandlerMapping的初始化工作完成的两个最重要的工作就是将URL与Handler的对应关系保存在handlerMap集合中，并将所有的inteceptors对象保存在adaptedInteceptors数组中，等请求到来时执行所有的adaptedInterceptors数组中的interceptor对象。
+
+Control的调用逻辑
+-------------
+Control的处理逻辑关键就是在DispatcherServlet的handlerMappings集合中根据请求的URL匹配每个HandlerMapping对象中的某个Handler，匹配成功后将会返回这个Hanlder的处理链HanderException对象。
+
+Model设计
+=========
+ModleAndView是连接业务逻辑层与View表现层的桥梁，对SpringMVC来说它是连接Handler与View的桥梁
