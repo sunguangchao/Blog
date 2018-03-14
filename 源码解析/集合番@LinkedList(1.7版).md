@@ -30,7 +30,7 @@ public class LinkedList<E>
 
     /**
      * Pointer to first node.
-     * Invariant: (first == null && last == null) ||
+     * Invariant(不变的): (first == null && last == null) ||
      *            (first.prev == null && first.item != null)
      */
     transient Node<E> first;
@@ -42,15 +42,146 @@ public class LinkedList<E>
      */
     transient Node<E> last;
 ```
+2.3构造器
+------------
+```java
+/**
+  * Constructs an empty list.
+  * 默认空构造器 -- 注意LinkedList并不提供指定容量的构造器
+  */
+public LinkedList() {
+}
+/**
+  * Constructs a list containing the elements of the specified
+  * collection, in the order they are returned by the collection's iterator.
+  * 支持将一个Collection转换成LinkedList
+  *
+  * @param  c the collection whose elements are to be placed into this list
+  * @throws NullPointerException if the specified collection is null
+  */
+public LinkedList(Collection<? extends E> c) {
+    this();
+    addAll(c);
+}
 
+```
+2.4Node
+--------
+```java
+/**
+  * 存储对象的结构：
+  *     每个Node节点包含了上一个节点和下一个节点的引用，从而构成了双向的链表
+  */
+
+private static class Node<E> {
+	E item;
+	Node<E> next;
+	Node<E> prev;
+	Node(Node<E> prev, E element, Node<E> next){
+		this.item = element;
+		this.next = next;
+		this.prev = prev;
+	}
+}
+```
+3.LinkedList的存储
+=============
+
+linkLast方法
+--------------
+```java
+//将元素e变为链表的最后一个元素
+void linkLast(E e){
+    final Node<E> l = last;
+    //注：新建的node的next为null
+    final Node<E> newNode = new Node<>(l, e, null);
+    //将新建node作链表尾部节点
+    last = newNode;
+    //当原队尾为null，即链表为空
+    if (l == null) {
+        //将新建的node作为链表头部节点
+        first = newNode;
+    }else{
+        //将原链表尾部节点的next引用指向新建node，形成链表结构
+        l.next = newNode;
+    }
+    //当前链表长度加1
+    size++;
+    //新增操作数据结构性变动，modCount计数加1
+    modCount++;
+}
+```
+
+linkBefore
+-----------
+```java
+//Insert element e before non-null Node succ
+//插入一个新的元素到指定非空节点之前
+void linkBefore(E e, Node<E> succ){
+    //逻辑与linkLast基本一致，区别在于将last变成prev，将新节点插入到succ节点之前
+    // assert succ != null;
+    final Node<E> pred = succ.prev;
+    final Node<E> newNode = new Node<>(pred, e, succ);
+    //唯一的区别，将新节点插入到succ节点之前
+    succ.prev = newNode;
+    if (pred == null) {
+        first = newNode;
+    }else{
+        pred.next = newNode;
+    }
+    size++;
+    modCount++;
+}
+```
+
+
+
+4.LinkedList的读取
+==============
+get方法
+----------
+```
+//获取指定元素下标
+public E get(int index){
+	ckeckElementIndex(index);
+	//注意返回不是node，而是item；同时node一定不为null，而item允许为null
+	return node(index).item;
+}
+```
+
+checkElementIndex方法
+--------------
+```java
+private void checkElementIndex(int index) {
+    if (!isElementIndex(index))
+        throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+}
+/**
+  * Tells if the argument is the index of an existing element.
+  * 判断当前下标是否存在元素，原理参见`linkBefore`
+  * 有心的读者可能发现了：
+  * （get）isElementIndex = index >= 0 && index < size;
+  * （add）isPositionIndex = index >= 0 && index <= size;
+  *  两个方法几乎一致，但有一个很明显的区别： isPositionIndex 多了个index=size的判断！！
+  *  由此（从方法名也可知-论方法名的严谨性）可知 ： 
+  *     get时下标必须小于size，否则下标越界；
+  *     add（指定元素）时 :
+  *         当index = size时，采用尾部插入，因为要占据下标为size的位置；
+  *         当index < size时，采用前部插入，因为要占据下标为index的位置，同时原位置元素后移；
+  */
+private boolean isElementIndex(int index) {
+    return index >= 0 && index < size;
+}
+```
 
 node方法
 ---------
 ```java
+//返回指定下标的非空node
 Node<E> node(int index){
 	//assert isElementIndex(index)
 	if (index < (size >> 1)) {
-		Node<E> x = first;//若在前办边，就从前往后找
+		Node<E> x = first;//若在前半边，就从前往后找
 		for (int i=0; i < index; i++) {
 			x = x.next;
 		}
@@ -64,6 +195,7 @@ Node<E> node(int index){
 	}
 }
 ```
+
 LinkedList的移除
 ==========
 remove方法
@@ -166,7 +298,4 @@ private E unlinkFirst(Node<E> f){
 
 }
 ```
-
-LinkedList的栈实现
-=============
 
