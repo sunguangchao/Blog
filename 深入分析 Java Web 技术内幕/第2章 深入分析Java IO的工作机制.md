@@ -1,3 +1,4 @@
+[TOC]
 Java的 I/O 类库的基本结构
 ==============
 Java的 I/O 操作类主要分为以下四种：
@@ -56,23 +57,26 @@ public class Serialize implements Serializable{
 
 网络I/O工作机制
 ==================
-TCP状态转化*  （三次握手和四次挥手）
+**TCP状态转化**  （三次握手和四次挥手）
 
 影响网络传输的因素  
-
 * 网络带宽
 * 传输距离
 * TCP 拥塞控制
 
-Java Socket的工作机制：
+Java Socket的工作机制
 ----------------------
 ![Java Socket通信](http://o90jubpdi.bkt.clouddn.com/Socket%E9%80%9A%E4%BF%A1.jpg)
+
 主机A的应用程序要能和主机B的应用程序通信，必须通过Socket建立连接，而建立Socket连接必须由底层TCP/IP来建立TCP连接。建立TCP连接需要底层IP来寻址网络中的主机。这样可以通过一个Socket实例来唯一代表一个主机上的应用程序的通信链路了。
 
-当客户端与服务端通信时，客户端首先创建一个Socket实例，操作系统会为这个Socket分配一个未被使用的本地端口号，并创建一个套接字，在Socket对象创建完成之前，会先进行TCP三次握手。
+建立通信链路
+------------
+当客户端与服务端通信时，客户端首先创建一个Socket实例，操作系统会为这个Socket分配一个未被使用的本地端口号，并创建一个套接字，在Socket对象创建完成之前，会先进行TCP三次握手，TCP握手协议完成后，Socket实例对象将创建完成，否则将抛出IOException异常。
 
-NIO 的工作方式*
-----------------
+
+NIO 的工作方式
+============
 ![NIO相关类图](http://o90jubpdi.bkt.clouddn.com/NIO%E7%9B%B8%E5%85%B3%E7%B1%BB%E5%9B%BE.jpg)
 ```java
 public void selector() throws IOException{
@@ -111,8 +115,9 @@ public void selector() throws IOException{
 ```
 调用 Selector 的静态工厂创建一个选择器，创建一个服务端的 Channel 绑定到一个 Socket 对象，并把这个通信信道注册到选择器上，把这个通信信道设置为非阻塞模式。然后就可以调用 Selector 的 selectedKeys 方法来检查已经注册在这个选择器上的所有通信信道是否有需要的事件发生，如果有某个事件发生时，将会返回所有的 SelectionKey，通过这个对象 Channel 方法就可以取得这个通信信道对象从而可以读取通信的数据，而这里读取的数据是 Buffer，这个 Buffer 是我们可以控制的缓冲器。
 
-服务端如何监听和处理连接请求？  
+**服务端如何监听和处理连接请求？**  
 一个线程专门负责监听客户端的连接请求，而且是以阻塞的方式进行；另外一个线程专门负责处理请求，这个专门负责处理请求的线程才会真正采用NIO的方式，像Web服务器Tomcat和Jetty都是使用这个处理方式。
+
 下图是描述了基于 NIO 工作方式的 Socket 请求的处理过程：
 ![](http://o90jubpdi.bkt.clouddn.com/%E5%9F%BA%E4%BA%8E%20NIO%20%E7%9A%84%20Socket%20%E8%AF%B7%E6%B1%82%E7%9A%84%E5%A4%84%E7%90%86%E8%BF%87%E7%A8%8B.jpg)
 上图中的 Selector 可以同时监听一组通信信道（Channel）上的 I/O 状态，前提是这个 Selector 要已经注册到这些通信信道中。选择器 Selector 可以调用 select() 方法检查已经注册的通信信道上的是否有 I/O 已经准备好，如果没有至少一个信道 I/O 状态有变化，那么 select 方法会阻塞等待或在超时时间后会返回 0。上图中如果有多个信道有数据，那么将会将这些数据分配到对应的数据 Buffer 中。所以关键的地方是有一个线程来处理所有连接的数据交互，每个连接的数据交互都不是阻塞方式，所以可以同时处理大量的连接请求。
