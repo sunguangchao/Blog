@@ -65,5 +65,5 @@ int size; //实际存在的键值对数量
 `>>>:无符号右移，忽略符号位，空位都以0补齐`
 
 reference:
-* https://tech.meituan.com/java-hashmap.html
+* [美团-重新认识HashMap](https://tech.meituan.com/java-hashmap.html)
 * http://blog.csdn.net/zxt0601/article/details/77413921
