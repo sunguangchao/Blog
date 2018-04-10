@@ -1,3 +1,5 @@
+1.简介
+===========
 Java为数据结构中的映射定义了一个接口java.util.Map，此接口主要有四个常用的实现类，分别是HashMap, Hashtable, LinkedHashMap和TreeMap，类继承关系如下图所示：
 ![](https://tech.meituan.com/img/java-hashmap/java.util.map%E7%B1%BB%E5%9B%BE.png)
 
@@ -13,9 +15,11 @@ Java为数据结构中的映射定义了一个接口java.util.Map，此接口主
 
 对于上述四种Map类型的类，要求映射中的key是不可变对象。不可变对象是该对象在创建之后哈希值不会被改变。如果对象的哈希值发生变化，Map对象可能就定位不到映射的位置了。
 
-内部实现
+2.内部实现
 ===========
 存储结构-字段
+------------
+从结构实现来讲，HashMap是数组+链表+红黑树实现的
 ![](https://tech.meituan.com/img/java-hashmap/hashMap%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84%E5%9B%BE.png)
 
 这里需要弄明白两个问题：数据底层存储具体存储的是什么？这种存储方式有什么优点呢？
@@ -38,6 +42,8 @@ static class Node<K, V> implements Map.Entry<K,V>{
   public final boolean equals(Object o) { ... }
 }
 ```
+Node是HashMap的一个内部类，实现了Map.Entry接口，本质上是一个映射。上图中每个黑色原点就是一个Node对象。
+
 
 (2) HashMap就是使用哈希表来存储的。哈希表为了解决冲突，可以采用开放地址法和链地址法等来解决问题，Java中HashMap采用链地址法。链地址法，简单来说，就是数组加链表的结合。每个数组元素上都有一个链表结构，当数据被Hash后，得到数组下标，把数据放在对应下标元素的链表上。
 
@@ -56,14 +62,22 @@ int modCount; //内部结构发生变化的次数
 int size; //实际存在的键值对数量
 ```
 
-首先，Node[] table的初始化长度length(默认值是16)，Load factor为负载因子(默认值是0.75)，threshold是HashMap所能容纳的最大数据量的Node(键值对)个数。threshold = length * Load factor。也就是说，在数组定义好长度之后，负载因子越大，所能容纳的键值对个数越多。
+首先，Node[] table的初始化长度length(默认值是16)，Load factor为负载因子(默认值是0.75)，threshold是HashMap所能容纳的最大数据量的Node(键值对)个数。threshold = length * Load factor。也就是说，在数组定义好长度之后，负载因子越大，所能容纳的键值对个数越多。而threshold就是在当前情况下允许的最大元素数目，超过这个数目就重新resize(扩容)，扩容后的HashMap容量是之前容量的两倍。
+
 
 在HashMap中，哈希桶数组table的长度length大小必须为2的n次方。
 
-存在的问题：即使负载因子和Hash算法的设计再合理，也难免会出现拉链过长的情况，一旦出现拉链过长，则会严重影响HashMap的性能。于是在JDK8版本中，对数据结构做了进一步的优化，进入了红黑树。当链表长度太长（默认超过8）时，链表就转化为了红黑树，利用红黑树快速增删改查的特点提高HashMap的性能。
+存在的问题：即使负载因子和Hash算法的设计再合理，也难免会出现拉链过长的情况，一旦出现拉链过长，则会严重影响HashMap的性能。于是在JDK8版本中，对数据结构做了进一步的优化，引入入了红黑树。当链表长度太长（默认超过8）时，链表就转化为了红黑树，利用红黑树快速增删改查的特点提高HashMap的性能。
 
 `>>>:无符号右移，忽略符号位，空位都以0补齐`
 
+功能实现-方法
+========
+Hash算法的本质：取key的hashCode值，高位运算，取模运算。
+![](https://tech.meituan.com/img/java-hashmap/hashMap%20put%E6%96%B9%E6%B3%95%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%9B%BE.png)
+
+
 reference:
+=========
 * [美团-重新认识HashMap](https://tech.meituan.com/java-hashmap.html)
 * http://blog.csdn.net/zxt0601/article/details/77413921
