@@ -48,3 +48,53 @@ Statement和PrepareStatement有什么区别？哪个性能更好？
 3. 当批量处理SQL或频繁执行相同的查询时，PreparedStatement有明显的性能上的优势，由于数据库可以将编译优化后的SQL语句缓存起来，下次执行相同结构的语句时就会很快（不用再次编译和生成执行计划）。
 
 补充：为了提供对存储过程的调用，JDBC API中还提供了CallableStatement接口。存储过程（Stored Procedure）是数据库中一组为了完成特定功能的SQL语句的集合，经编译后存储在数据库中，用户通过指定存储过程的名字并给出参数（如果该存储过程带有参数）来执行它。虽然调用存储过程会在网络开销、安全性、性能上获得很多好处，但是存在如果底层数据库发生迁移时就会有很多麻烦，因为每种数据库的存储过程在书写上存在不少的差别。
+
+JDBC能否处理Blob和Clob?
+==========
+答： Blob是指二进制大对象（Binary Large Object），而Clob是指大字符对象（Character Large Objec），因此其中Blob是为存储大的二进制数据而设计的，而Clob是为存储大的文本数据而设计的。JDBC的PreparedStatement和ResultSet都提供了相应的方法来支持Blob和Clob操作。下面的代码展示了如何使用JDBC操作LOB： 
+```java
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+class JdbcLobTest {
+
+    public static void main(String[] args) {
+        Connection con = null;
+        try {
+            // 1. 加载驱动（Java6以上版本可以省略）
+            Class.forName("com.mysql.jdbc.Driver");
+            // 2. 建立连接
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/test", "root", "123456");
+            // 3. 创建语句对象
+            PreparedStatement ps = con.prepareStatement("insert into tb_user values (default, ?, ?)");
+            ps.setString(1, "骆昊");              // 将SQL语句中第一个占位符换成字符串
+            try (InputStream in = new FileInputStream("test.jpg")) {    // Java 7的TWR
+                ps.setBinaryStream(2, in);      // 将SQL语句中第二个占位符换成二进制流
+                // 4. 发出SQL语句获得受影响行数
+                System.out.println(ps.executeUpdate() == 1 ? "插入成功" : "插入失败");
+            } catch(IOException e) {
+                System.out.println("读取照片失败!");
+            }
+        } catch (ClassNotFoundException | SQLException e) {     // Java 7的多异常捕获
+            e.printStackTrace();
+        } finally { // 释放外部资源的代码都应当放在finally中保证其能够得到执行
+            try {
+                if(con != null && !con.isClosed()) {
+                    con.close();    // 5. 释放数据库连接 
+                    con = null;     // 指示垃圾回收器可以回收该对象
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+```
+
+reference:
+https://blog.csdn.net/jackfrued/article/details/44921941
