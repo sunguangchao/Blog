@@ -214,7 +214,7 @@ abstract static class Sync extends AbstractQueuedSynchronizer
 
 3.2 核心方法
 ------------
-###3.2.1 lock
+### 3.2.1 lock
 ```java
 /**
  * Performs {@link Lock#lock}. The main reason for subclassing
@@ -278,7 +278,7 @@ final boolean nonfairTryAcquire(int acquires){
 }
 ```
 
-###3.2.3  tryRelease
+### 3.2.3  tryRelease
 解锁主要做了两件事情：  
 1. CAS更新状态(状态值会减少)
 2. 解除锁与当前持有线程的关联
@@ -470,17 +470,20 @@ public final boolean hasQueuedPredecessors() {
 }
 ```
 
-**小问：ReentrantLock是如何实现公平的？** 
+**小问：ReentrantLock是如何实现公平的？**   
 友情小提示：关键在于hasQueuedPredecessors()的使用上面
 
 小答： 有心的读者可能已经发现了，在步骤4时使用了&&操作，即前者必须满足条件后才执行CAS；同时结合tryAquire()在AQS中使用的方式，就很容易知道公平的实现，但为了方便起见，笔者还是用例子简单说一下AQS的实现过程：
 
 **基本要素：**
 有一个变量state=0；假设当前线程为A，每当A获取一次锁，state+1;A释放一次锁,state-1;同时锁会设置/清空关联线程;
+
 **基本流程：**
 假设当前线程A持有锁，此时state增加并>0；此时线程B尝试获取锁，若(1|N)次执行CAS(0,1)失败，线程会加入同步队列的队尾并被挂起等待；当A完全释放锁时，state减少并=0，同时唤醒同步队列的头节点(假设此时是B)，B被唤醒后会去尝试CAS(0,1)；刚好线程C也尝试去竞争这个锁，下面就有两种实现方式：
+
 **非公平锁实现：**
 线程C直接尝试CAS(0,1)，若成功更新成功，则B就获取失败，那么要再次挂起 - 明明是B在C之前就尝试获取锁了，但反而是C先抢到了锁；
+
 **公平锁实现：**
 线程C会先检查同步队列中是否有比当前线程等待时间更长的线程，有的话就不执行CAS了，直接进入等待队列并挂起等待，这样B就能获取到锁了.
 

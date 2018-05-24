@@ -294,6 +294,12 @@ public class MutiThread {
 3. 如果其他各个方法都加了synchronized关键字，并且内部没有调用wait，则不能
 4. 如果其他方法是static，它用的同步锁是当前类的字节码，与非静态类的方法不能同步，因为非静态的方法用的是this。
 
+
+当一个线程进入一个对象的synchronized方法A之后，其它线程是否可进入此对象的synchronized方法B？ 
+----------
+不能。其他线程只能访问该对象的非同步方法，同步方法不能进入。因为非静态方法的synchronized修饰符要求执行方法时要获得对象的锁，如果已经进入方法A则说明对象锁已经被取走，那么试图进入B方法的线程就只能在等锁池（注意不是等待池）中等待对象的锁。
+
+
 21.线程的基本概念、线程的基本状态及状态之间的关系
 ===========
 ![](https://img-blog.csdn.net/20150408002007838)
@@ -391,7 +397,7 @@ ThreadLocal是一种以空间换时间的做法，在每个Thread里面维护了
 1. 降低资源消耗。通过重复利用已创建的线程降低线程创建和销毁造成的消耗
 2. 提高响应速度。当任务到达时，任务可以不需要等到线程创建就能立即执行
 3. 提高线程的可管理性
-  
+
 常用线程池：ExecutorService
 
 24.生产者消费者模型的作用是什么？
@@ -518,7 +524,21 @@ fail-fast机制是Java集合(Collection)中的一种错误机制。当多个线�
 * -XX:InitialTenuringThreshold/-XX:MaxTenuringThreshold:设置老年代阀值的初始值和最大值
 * -XX:TargetSurvivorRatio:设置幸存区的目标使用率
 
+29.获得一个类的类对象有哪些方式？
+=========
+* 类型.class，如String.class
+* 对象.getClass()，如"hello".getClass()
+* Class.forName()，如Class.forName("java.lang.String")
+
+30.如何通过反射获取和设置私有字段的值？
+=========
+可以通过类对象的getDeclaredField()方法字段（Field）对象，然后再通过字段对象的setAccessible(true)将其设置为可以访问，接下来就可以通过get/set方法来获取/设置字段的值了。可以查看[相关代码](https://github.com/sunguangchao/java-learning/blob/master/Java%E9%9D%A2%E8%AF%95%E5%AE%9D%E5%85%B8/ReflectionUtils.java)
+
+
+
+
 其他参考：
+
 * [Spring + Redis 实现数据的缓存](http://www.importnew.com/22868.html)
 * [谈谈Java反射机制](http://www.importnew.com/23560.html)
 * [关于Spring的69个面试问答](http://www.importnew.com/11657.html)
