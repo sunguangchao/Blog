@@ -123,7 +123,7 @@ protected synchronized void doExport() { // 5
 
 通过`loadRegistries()`从`registryConfig`生成的注册中心URL格式如下：
 
-![registry_url](Dubbo远程通信.assets/rpc_6-1.png)
+![registry_url](Dubbo-remote-connection-assets/rpc_6-1.png)
 
 在URL的 **schema** 使用`registry`表示这是一个注册中心的URL。URL的 **host** 表示注册中心的主机地址。注册中心的URL的 **path** 部分是`org.apache.dubbo.registry.RegistryService`，最后Dubbo的配置信息通过URL的 **query** 参数进行拼接。在拼接 **query** 参数的时候，需要注意的是：方法`loadRegistries()`除了将Dubbo的配置信息放到 **query** 参数上之外，URL中还会把注册中心地址URL中的 **schema** 属性作为参数`registry`拼接到 **query** 中，用于表示使用哪种注册中心实现。比如在我们例子中会加上 `registry=zookeeper`。
 
@@ -149,7 +149,7 @@ registry://127.0.0.1:2181/org.apache.dubbo.registry.RegistryService
 
 首先生成服务提供者的URL，服务提供者的URL由5部分组成：
 
-![provider_url](Dubbo远程通信.assets/rpc_6-2.png)
+![provider_url](Dubbo-remote-connection-assets/rpc_6-2.png)
 
 1. 协议头`schema`。协议头的值从协议配置类`ProtocolConfig`的`name`属性获取，表示服务将是用何种协议暴露，Dubbo支持多种协议扩展，比如`http`、`dubbo`、`hessian`等等，协议扩展的实现在Dubbo源码的`dubbo-rpc`模块中。在这里，我们的例子中使用了`dubbo`协议。
 2. 服务提供者的主机地址`host`。
@@ -182,7 +182,7 @@ dubbo://192.168.31.16:20080/org.learn.dubbo.service.UserService
 
 生成服务提供者的URL以后，接下来就可以基于这个URL上编码的配置信息进行服务暴露了。首先，通过判断`scope`的配置值来决定是远程暴露还是本地暴露。
 
-![scope](Dubbo远程通信.assets/rpc_6-3.png)
+![scope](Dubbo-remote-connection-assets/rpc_6-3.png)
 
 1. 如果值为`local`则表示只进行本地暴露。
 2. 如果值为`remote`则进行远程暴露。
@@ -505,7 +505,7 @@ private T createProxy(Map<String, String> map) {
 1. 判断远程服务地址有多少个，如果只有一个远程服务地址，则直接调用`Protocol`的`refer()`方法创建`Invoker`对象。入股有多个远程服务地址，则需要引入集群管理。这里需要注意的是，`urls`中包含的的地址可能是一个服务提供方的地址（端到端的场景），也可能是一个注册中心的地址（Dubbo会将注册中心伪装成一个`Invoker`，这部分涉及到Dubbo集群的内容，这里不展开）。
 2. 通过代理工厂生产动态代理类。关于动态代理类和`Invoker`之间的关系，可以参考[这里](https://tech101.cn/2020/02/01/Dubbo源码解析-RPC实现原理#方法调用向invoker转换)。
 
-![refer](Dubbo远程通信.assets/rpc_6-4.png)
+![refer](Dubbo-remote-connection-assets/rpc_6-4.png)
 
 关于`Protocol`中引用服务的逻辑，不同的协议实现都不同。在`dubbo-rpc`模块中可以找到对应协议的服务引用实现，我们在[这里](https://tech101.cn/2020/02/01/Dubbo源码解析-RPC实现原理#引用)介绍了Dubbo协议是如何在RPC这一层引用服务的：通过创建和服务提供方的TCP长连接来向服务提供方发起远程调用。
 
@@ -602,7 +602,7 @@ XML配置中的自定义标签通过注册的`DubboBeanDefinitionParser`解析�
 
 基于Java的配置中创建的`ApplicationConfig`、`RegistryConfig`、`ProtocolConfig`以及`ServiceConfig`对象，在XML配置中都是由Spring容器创建的。通过`DubboNamespaceHandler`解析自定义的标签，生成这些类的`BeanDefinition`实例，然后由Spring容器生成对应的配置对象。其中用于Java API中服务暴露的`ServiceConfig`类，对应的Bean对象就是`ServiceBean`，而`ReferenceConfig`对应的是`ReferenceBean`对象。
 
-![xml](Dubbo远程通信.assets/rpc_6-5.png)
+![xml](Dubbo-remote-connection-assets/rpc_6-5.png)
 
 #### ServiceBean
 
@@ -770,7 +770,7 @@ private static class ReferenceBeanInvocationHandler implements InvocationHandler
 }
 ```
 
-![annotation](Dubbo远程通信.assets/rpc_6-6.png)
+![annotation](Dubbo-remote-connection-assets/rpc_6-6.png)
 
 ## 总结
 
